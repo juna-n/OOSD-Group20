@@ -1,13 +1,17 @@
 package org.oosd.ui;
 
+import javafx.animation.PauseTransition;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 //splash screen with group members
 
 public class SplashScreen extends BaseScreen {
+
+    private static final Duration SPLASH_DURATION = Duration.seconds(3);
 
     public SplashScreen(Navigator navigator) {
         super(navigator);
@@ -31,5 +35,12 @@ public class SplashScreen extends BaseScreen {
         layout.setAlignment(Pos.CENTER);
         layout.setStyle("-fx-background-color: #1b1b22;");
         return layout;
+    }
+
+    @Override
+    public void onShow() {
+        PauseTransition delay = new PauseTransition(SPLASH_DURATION);
+        delay.setOnFinished(event -> navigator.show(new MainMenuScreen(navigator)));
+        delay.play();
     }
 }
