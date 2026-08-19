@@ -3,9 +3,7 @@ package org.oosd.ui;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
@@ -46,15 +44,8 @@ public class MainMenuScreen extends BaseScreen {
     }
 
     private void confirmExit() {
-        Alert alert = new Alert(
-                Alert.AlertType.CONFIRMATION,
-                "Are you sure you want to exit?",
-                ButtonType.YES,
-                ButtonType.NO);
-        alert.setTitle("Exit");
-        alert.setHeaderText(null);
-        alert.showAndWait()
-                .filter(response -> response == ButtonType.YES)
-                .ifPresent(response -> navigator.exitApp());
+        if (Dialogs.confirm(getRoot(), "Exit", "Are you sure you want to exit?")) {
+            navigator.exitApp();
+        }
     }
 }

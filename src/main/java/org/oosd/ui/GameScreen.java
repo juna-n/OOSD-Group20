@@ -25,7 +25,16 @@ import org.oosd.model.TetrominoType;
 //playing screen, game logic lives in GameState
 public class GameScreen extends BaseScreen {
 
-    private static final int CELL = 30;
+    //cell size used whenever the field is small enough to afford it
+    private static final int PREFERRED_CELL = 30;
+    private static final int MIN_CELL = 12;
+
+    private static final int SIDEBAR_WIDTH = 170;
+    private static final int LAYOUT_PADDING = 24;
+    private static final int LAYOUT_GAP = 24;
+    private static final int FIELD_MAX_WIDTH_PX = 640 - (2 * LAYOUT_PADDING) - LAYOUT_GAP - SIDEBAR_WIDTH;
+    private static final int FIELD_MAX_HEIGHT_PX = 760 - (2 * LAYOUT_PADDING) - 12;
+
     private static final int PREVIEW_CELL = 18;
     private static final int PREVIEW_BOX = 4;
 
@@ -33,6 +42,11 @@ public class GameScreen extends BaseScreen {
     private static final Color GRID_LINE = Color.web("#26262f");
 
     private final GameState state;
+
+    //pixel size of one cell for this game, not a constant because the config
+    //screen lets the field grow to 15x30, which at 30px would need a 450x900
+    //field and overflows the window in both directions
+    private final int cell;
 
     private Canvas fieldCanvas;
     private Canvas previewCanvas;
@@ -49,12 +63,21 @@ public class GameScreen extends BaseScreen {
     public GameScreen(Navigator navigator) {
         super(navigator);
         this.state = new GameState(ConfigStore.current());
+        this.cell = fittedCellSize(state.board().cols(), state.board().rows());
+    }
+
+    //largest cell size, up to the preferred one, that keeps the field on screen
+    private static int fittedCellSize(int cols, int rows) {
+        int limitedByWidth = FIELD_MAX_WIDTH_PX / cols;
+        int limitedByHeight = FIELD_MAX_HEIGHT_PX / rows;
+        int fitted = Math.min(limitedByWidth, limitedByHeight);
+        return Math.max(MIN_CELL, Math.min(PREFERRED_CELL, fitted));
     }
 
     @Override
     protected Parent buildRoot() {
         GameBoard board = state.board();
-        fieldCanvas = new Canvas(board.cols() * CELL, board.rows() * CELL);
+        fieldCanvas = new Canvas(board.cols() * cell, board.rows() * cell);
         previewCanvas = new Canvas(PREVIEW_BOX * PREVIEW_CELL, PREVIEW_BOX * PREVIEW_CELL);
 
         scoreValue = statValue("0");
@@ -66,7 +89,7 @@ public class GameScreen extends BaseScreen {
         //without this the button grabs keyboard focus and the arrow keys start
         //navigating the UI instead of moving the tetromino
         backButton.setFocusTraversable(false);
-        backButton.setOnAction(event -> leave());
+        backButton.setOnAction(event -> confirmLeave());
 
         VBox sidebar = new VBox(8,
                 statCaption("Next"), previewCanvas,
@@ -77,11 +100,12 @@ public class GameScreen extends BaseScreen {
                 controlsHint(),
                 backButton);
         sidebar.setAlignment(Pos.TOP_LEFT);
-        sidebar.setPrefWidth(170);
+        sidebar.setPrefWidth(SIDEBAR_WIDTH);
+        sidebar.setMinWidth(SIDEBAR_WIDTH);
 
-        HBox layout = new HBox(24, fieldCanvas, sidebar);
+        HBox layout = new HBox(LAYOUT_GAP, fieldCanvas, sidebar);
         layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(24));
+        layout.setPadding(new Insets(LAYOUT_PADDING));
         layout.setStyle("-fx-background-color: #1b1b22;");
 
         //key events go to the focused node, so the root has to be focusable
@@ -148,13 +172,37 @@ public class GameScreen extends BaseScreen {
                 fallProgress = 0;
             }
             case P -> state.togglePause();
-            case ESCAPE -> leave();
+            case ESCAPE -> confirmLeave();
             default -> {
                 //every other key is ignored
             }
         }
         render();
         event.consume();
+    }
+
+    private void confirmLeave() {
+        boolean pausedByPlayer = state.isPaused();
+
+        if (!pausedByPlayer) {
+            state.togglePause();
+            render();
+        }
+
+        boolean confirmed = Dialogs.confirm(getRoot(), "Back to Menu",
+                "Return to the main menu? Your current game will be lost.");
+
+        if (confirmed) {
+            leave();
+            return;
+        }
+
+        if (!pausedByPlayer) {
+            state.togglePause();
+        }
+        //the dialog took focus, take it back or the arrow keys stay dead
+        getRoot().requestFocus();
+        render();
     }
 
     private void leave() {
@@ -178,7 +226,7 @@ public class GameScreen extends BaseScreen {
             for (int col = 0; col < board.cols(); col++) {
                 TetrominoType type = board.blockAt(row, col);
                 if (type != null) {
-                    drawBlock(gc, col * CELL, row * CELL, CELL, BlockPalette.colorOf(type));
+                    drawBlock(gc, col * cell, row * cell, cell, BlockPalette.colorOf(type));
                 }
             }
         }
@@ -186,9 +234,9 @@ public class GameScreen extends BaseScreen {
         double offset = state.canFall() ? fallProgress : 0.0;
         Tetromino piece = state.current();
         Color pieceColor = BlockPalette.colorOf(piece.type());
-        for (Cell cell : piece.cells()) {
-            if (cell.row() >= 0) {
-                drawBlock(gc, cell.col() * CELL, (cell.row() + offset) * CELL, CELL, pieceColor);
+        for (Cell blockCell : piece.cells()) {
+            if (blockCell.row() >= 0) {
+                drawBlock(gc, blockCell.col() * cell, (blockCell.row() + offset) * cell, cell, pieceColor);
             }
         }
 
@@ -212,10 +260,10 @@ public class GameScreen extends BaseScreen {
         TetrominoType type = state.next();
         Color color = BlockPalette.colorOf(type);
         double inset = (PREVIEW_BOX - type.boxSize()) * PREVIEW_CELL / 2.0;
-        for (Cell cell : type.baseCells()) {
+        for (Cell blockCell : type.baseCells()) {
             drawBlock(gc,
-                    inset + cell.col() * PREVIEW_CELL,
-                    inset + cell.row() * PREVIEW_CELL,
+                    inset + blockCell.col() * PREVIEW_CELL,
+                    inset + blockCell.row() * PREVIEW_CELL,
                     PREVIEW_CELL, color);
         }
     }
@@ -224,10 +272,10 @@ public class GameScreen extends BaseScreen {
         gc.setStroke(GRID_LINE);
         gc.setLineWidth(1);
         for (int col = 1; col < board.cols(); col++) {
-            gc.strokeLine(col * CELL, 0, col * CELL, fieldCanvas.getHeight());
+            gc.strokeLine(col * cell, 0, col * cell, fieldCanvas.getHeight());
         }
         for (int row = 1; row < board.rows(); row++) {
-            gc.strokeLine(0, row * CELL, fieldCanvas.getWidth(), row * CELL);
+            gc.strokeLine(0, row * cell, fieldCanvas.getWidth(), row * cell);
         }
     }
 
