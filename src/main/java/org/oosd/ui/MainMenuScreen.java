@@ -3,14 +3,11 @@ package org.oosd.ui;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
-//main menu, with Play, Configuration, High Scores, and Exit
-
+//main screen, Play, Configuration, High Scores, Exit
 public class MainMenuScreen extends BaseScreen {
 
     public MainMenuScreen(Navigator navigator) {
@@ -27,12 +24,9 @@ public class MainMenuScreen extends BaseScreen {
         Button highScores = menuButton("High Scores");
         Button exit = menuButton("Exit");
 
-        //TODO: navigator.show(new GameScreen(navigator));
-        play.setOnAction(event -> System.out.println("Play not implemented yet"));
-        //TODO: navigator.show(new ConfigurationScreen(navigator));
-        configuration.setOnAction(event -> System.out.println("Configuration not implemented yet"));
-        //TODO: navigator.show(new HighScoreScreen(navigator));
-        highScores.setOnAction(event -> System.out.println("High scores not implemented yet"));
+        play.setOnAction(event -> navigator.show(new GameScreen(navigator)));
+        configuration.setOnAction(event -> navigator.show(new ConfigurationScreen(navigator)));
+        highScores.setOnAction(event -> navigator.show(new HighScoreScreen(navigator)));
         exit.setOnAction(event -> confirmExit());
 
         VBox layout = new VBox(14, heading, play, configuration, highScores, exit);
@@ -49,17 +43,9 @@ public class MainMenuScreen extends BaseScreen {
         return button;
     }
 
-    //exit confirmation pop up
     private void confirmExit() {
-        Alert alert = new Alert(
-                Alert.AlertType.CONFIRMATION,
-                "Are you sure you want to exit?",
-                ButtonType.YES,
-                ButtonType.NO);
-        alert.setTitle("Exit");
-        alert.setHeaderText(null);
-        alert.showAndWait()
-                .filter(response -> response == ButtonType.YES)
-                .ifPresent(response -> navigator.exitApp());
+        if (Dialogs.confirm(getRoot(), "Exit", "Are you sure you want to exit?")) {
+            navigator.exitApp();
+        }
     }
 }
