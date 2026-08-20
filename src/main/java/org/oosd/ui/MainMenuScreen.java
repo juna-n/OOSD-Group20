@@ -10,6 +10,8 @@ import javafx.scene.layout.VBox;
 //main screen, Play, Configuration, High Scores, Exit
 public class MainMenuScreen extends BaseScreen {
 
+    private static final String BACKGROUND_PATH = "/images/menu-background.png";
+
     public MainMenuScreen(Navigator navigator) {
         super(navigator);
     }
@@ -32,8 +34,11 @@ public class MainMenuScreen extends BaseScreen {
         VBox layout = new VBox(14, heading, play, configuration, highScores, exit);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(40));
-        layout.setStyle("-fx-background-color: #1b1b22;");
-        return layout;
+        //no background colour here, it would paint over the image behind it
+
+        //slightly stronger scrim than the splash, the buttons sit over a wider
+        //area of the artwork and need the extra contrast
+        return withBackground(BACKGROUND_PATH, layout, 0.62);
     }
 
     private Button menuButton(String text) {
@@ -43,6 +48,7 @@ public class MainMenuScreen extends BaseScreen {
         return button;
     }
 
+    //shares Dialogs.confirm with the game screen so both prompts match
     private void confirmExit() {
         if (Dialogs.confirm(getRoot(), "Exit", "Are you sure you want to exit?")) {
             navigator.exitApp();

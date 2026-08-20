@@ -8,10 +8,10 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 //splash screen with group members
-
 public class SplashScreen extends BaseScreen {
 
     private static final Duration SPLASH_DURATION = Duration.seconds(3);
+    private static final String BACKGROUND_PATH = "/images/splash-background.png";
 
     public SplashScreen(Navigator navigator) {
         super(navigator);
@@ -31,10 +31,11 @@ public class SplashScreen extends BaseScreen {
         Label members = new Label("Oscar Unicomb-Dodds \u00b7 Juna Nakanishi \u00b7 Pedro Penna Navarrete");
         members.setStyle("-fx-font-size: 14px; -fx-text-fill: #9f9f9f;");
 
-        VBox layout = new VBox(14, title, course, group, members);
-        layout.setAlignment(Pos.CENTER);
-        layout.setStyle("-fx-background-color: #1b1b22;");
-        return layout;
+        VBox textLayer = new VBox(14, title, course, group, members);
+        textLayer.setAlignment(Pos.CENTER);
+
+        //layering is inherited from BaseScreen so the menu can reuse it
+        return withBackground(BACKGROUND_PATH, textLayer);
     }
 
     @Override
