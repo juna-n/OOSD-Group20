@@ -10,7 +10,8 @@ import javafx.scene.layout.VBox;
 //main screen, Play, Configuration, High Scores, Exit
 public class MainMenuScreen extends BaseScreen {
 
-    private static final String BACKGROUND_PATH = "/images/menu-background.png";
+    //main menu background image to be included later
+    //private static final String BACKGROUND_PATH = "/images/menu-background.png";
 
     public MainMenuScreen(Navigator navigator) {
         super(navigator);
@@ -34,11 +35,14 @@ public class MainMenuScreen extends BaseScreen {
         VBox layout = new VBox(14, heading, play, configuration, highScores, exit);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(40));
-        //no background colour here, it would paint over the image behind it
+        //remove background colour when including the image, otherwise colour paints over the image
+        layout.setStyle("-fx-background-color: #1b1b22;");
 
-        //slightly stronger scrim than the splash, the buttons sit over a wider
-        //area of the artwork and need the extra contrast
-        return withBackground(BACKGROUND_PATH, layout, 0.62);
+        //slightly stronger scrim than the splash screen, helps keep buttons readable
+        //return withBackground(BACKGROUND_PATH, layout, 0.62);
+
+        //also remove when adding background image
+        return layout;
     }
 
     private Button menuButton(String text) {
