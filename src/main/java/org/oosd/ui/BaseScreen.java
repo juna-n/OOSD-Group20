@@ -1,12 +1,11 @@
 package org.oosd.ui;
 
+import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import java.net.URL;
 
-/*
- abstract class rather than another interface because it holds
- state (the navigator reference and the root node) and provides an
- implementation subclasses inherit rather than repeat
-*/
 public abstract class BaseScreen implements Screen {
 
     protected final Navigator navigator;
@@ -25,5 +24,52 @@ public abstract class BaseScreen implements Screen {
             root = buildRoot();
         }
         return root;
+    }
+
+    //base colour of every screen, also the fallback when an image is missing
+    protected static final String BACKGROUND_COLOR = "#1b1b22";
+
+    private static final double DEFAULT_SCRIM_OPACITY = 0.55;
+
+    //wraps content over a background image, using the default scrim strength
+    protected Parent withBackground(String resourcePath, Node content) {
+        return withBackground(resourcePath, content, DEFAULT_SCRIM_OPACITY);
+    }
+
+    protected Parent withBackground(String resourcePath, Node content, double scrimOpacity) {
+        StackPane layered = new StackPane();
+        layered.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
+
+        URL image = getClass().getResource(resourcePath);
+        if (image != null) {
+            layered.getChildren().addAll(backgroundLayer(image), scrimLayer(scrimOpacity));
+        } else {
+            //prevent a missing asset stopping the program from starting
+            System.err.println("Background image not found on classpath: " + resourcePath);
+        }
+
+        layered.getChildren().add(content);
+        return layered;
+    }
+
+    /*
+    a Region with a CSS background rather than an ImageView, because
+    -fx-background-size: cover fills the window at any size without
+    distorting the image
+    */
+    private static Region backgroundLayer(URL image) {
+        Region background = new Region();
+        background.setStyle(
+                "-fx-background-image: url('" + image.toExternalForm() + "');"
+                        + "-fx-background-size: cover;"
+                        + "-fx-background-position: center center;"
+                        + "-fx-background-repeat: no-repeat;");
+        return background;
+    }
+
+    private static Region scrimLayer(double opacity) {
+        Region scrim = new Region();
+        scrim.setStyle("-fx-background-color: rgba(16, 16, 22, " + opacity + ");");
+        return scrim;
     }
 }

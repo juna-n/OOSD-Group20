@@ -182,6 +182,11 @@ public class GameScreen extends BaseScreen {
     }
 
     private void confirmLeave() {
+        if (state.isGameOver()) {
+            leave();
+            return;
+        }
+
         boolean pausedByPlayer = state.isPaused();
 
         if (!pausedByPlayer) {
