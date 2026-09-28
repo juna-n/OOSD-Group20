@@ -6,11 +6,15 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.oosd.model.ConfigStore;
 import org.oosd.model.GameConfig;
+import org.oosd.model.PlayerType;
 
 //configuration screen, all the controls write straight to configstore
 public class ConfigurationScreen extends BaseScreen {
@@ -20,8 +24,9 @@ public class ConfigurationScreen extends BaseScreen {
     private Slider levelSlider;
     private CheckBox musicBox;
     private CheckBox soundEffectsBox;
-    private CheckBox aiPlayBox;
     private CheckBox extendedModeBox;
+    private ToggleGroup playerOneGroup;
+    private ToggleGroup playerTwoGroup;
 
     private boolean ready;
 
@@ -50,8 +55,14 @@ public class ConfigurationScreen extends BaseScreen {
 
         musicBox = addCheckBox(grid, 3, "Music", config.music());
         soundEffectsBox = addCheckBox(grid, 4, "Sound Effects", config.soundEffects());
-        aiPlayBox = addCheckBox(grid, 5, "AI Play", config.aiPlay());
-        extendedModeBox = addCheckBox(grid, 6, "Extended Mode", config.extendedMode());
+        extendedModeBox = addCheckBox(grid, 5, "Extended Mode (2 players)", config.extendedMode());
+
+        playerOneGroup = addPlayerTypeRow(grid, 6, "Player One Type", config.playerOneType());
+        playerTwoGroup = addPlayerTypeRow(grid, 7, "Player Two Type", config.playerTwoType());
+
+        //player two only exists in extended mode, so grey its choices out otherwise
+        playerTwoGroup.getToggles().forEach(toggle ->
+                ((RadioButton) toggle).disableProperty().bind(extendedModeBox.selectedProperty().not()));
 
         Button backButton = new Button("Back");
         backButton.setPrefWidth(200);
@@ -109,6 +120,34 @@ public class ConfigurationScreen extends BaseScreen {
         return checkBox;
     }
 
+    //one radio button per PlayerType, built from the enum so a new type appears automatically
+    private ToggleGroup addPlayerTypeRow(GridPane grid, int row, String caption, PlayerType initial) {
+        ToggleGroup group = new ToggleGroup();
+        HBox options = new HBox(14);
+        options.setAlignment(Pos.CENTER_LEFT);
+
+        for (PlayerType type : PlayerType.values()) {
+            RadioButton button = new RadioButton(type.label());
+            button.setUserData(type);
+            button.setToggleGroup(group);
+            button.setSelected(type == initial);
+            button.setStyle("-fx-font-size: 14px; -fx-text-fill: #f2f2f2;");
+            options.getChildren().add(button);
+        }
+
+        group.selectedToggleProperty().addListener((observable, oldValue, newValue) -> save());
+
+        grid.add(caption(caption), 0, row);
+        grid.add(options, 1, row, 2, 1);
+        return group;
+    }
+
+    private static PlayerType selectedType(ToggleGroup group) {
+        return group.getSelectedToggle() == null
+                ? PlayerType.HUMAN
+                : (PlayerType) group.getSelectedToggle().getUserData();
+    }
+
     private Label caption(String text) {
         Label label = new Label(text);
         label.setStyle("-fx-font-size: 14px; -fx-text-fill: #c9c9d1;");
@@ -125,7 +164,8 @@ public class ConfigurationScreen extends BaseScreen {
                 (int) levelSlider.getValue(),
                 musicBox.isSelected(),
                 soundEffectsBox.isSelected(),
-                aiPlayBox.isSelected(),
-                extendedModeBox.isSelected()));
+                extendedModeBox.isSelected(),
+                selectedType(playerOneGroup),
+                selectedType(playerTwoGroup)));
     }
 }
