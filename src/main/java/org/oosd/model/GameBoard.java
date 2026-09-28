@@ -19,6 +19,15 @@ public final class GameBoard {
         this(DEFAULT_ROWS, DEFAULT_COLS);
     }
 
+    //independent copy, the AI simulates drops on copies so the real board is never touched
+    public GameBoard copy() {
+        GameBoard clone = new GameBoard(rows, cols);
+        for (int row = 0; row < rows; row++) {
+            System.arraycopy(grid[row], 0, clone.grid[row], 0, cols);
+        }
+        return clone;
+    }
+
     public int rows() {
         return rows;
     }
@@ -80,6 +89,17 @@ public final class GameBoard {
             }
         }
         return true;
+    }
+
+    //the board as 0 (empty) and 1 (filled), row 0 at the top
+    public int[][] toOccupancyMatrix() {
+        int[][] matrix = new int[rows][cols];
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                matrix[row][col] = grid[row][col] == null ? 0 : 1;
+            }
+        }
+        return matrix;
     }
 
     private void collapseInto(int target) {
