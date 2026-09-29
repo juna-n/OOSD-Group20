@@ -37,3 +37,8 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### local game data created at runtime ###
+tetris-config.json
+tetris-scores.json
+*.json.tmp

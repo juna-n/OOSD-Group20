@@ -12,11 +12,11 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import org.oosd.model.ConfigStore;
 import org.oosd.model.GameConfig;
 import org.oosd.model.PlayerType;
+import org.oosd.persistence.ConfigManager;
 
-//configuration screen, all the controls write straight to configstore
+//configuration screen, every change is saved straight to the JSON config file
 public class ConfigurationScreen extends BaseScreen {
 
     private Slider widthSlider;
@@ -36,7 +36,7 @@ public class ConfigurationScreen extends BaseScreen {
 
     @Override
     protected Parent buildRoot() {
-        GameConfig config = ConfigStore.current();
+        GameConfig config = ConfigManager.getInstance().current();
 
         Label heading = new Label("Configuration");
         heading.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;");
@@ -158,7 +158,7 @@ public class ConfigurationScreen extends BaseScreen {
         if (!ready) {
             return;
         }
-        ConfigStore.update(new GameConfig(
+        ConfigManager.getInstance().update(new GameConfig(
                 (int) widthSlider.getValue(),
                 (int) heightSlider.getValue(),
                 (int) levelSlider.getValue(),

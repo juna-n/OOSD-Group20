@@ -1,6 +1,7 @@
 package org.oosd.ui;
 
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -16,11 +17,14 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import org.oosd.model.Cell;
-import org.oosd.model.ConfigStore;
 import org.oosd.model.GameBoard;
+import org.oosd.model.GameConfig;
 import org.oosd.model.GameState;
+import org.oosd.model.HighScore;
 import org.oosd.model.Tetromino;
 import org.oosd.model.TetrominoType;
+import org.oosd.persistence.ConfigManager;
+import org.oosd.persistence.HighScoreManager;
 
 //playing screen, game logic lives in GameState
 public class GameScreen extends BaseScreen {
@@ -41,6 +45,7 @@ public class GameScreen extends BaseScreen {
     private static final Color FIELD_BACKGROUND = Color.web("#101016");
     private static final Color GRID_LINE = Color.web("#26262f");
 
+    private final GameConfig config;
     private final GameState state;
 
     //pixel size of one cell for this game, not a constant because the config
@@ -60,9 +65,13 @@ public class GameScreen extends BaseScreen {
 
     private long lastFrameNanos;
 
+    //the name prompt must only ever appear once per game
+    private boolean highScoreOffered;
+
     public GameScreen(Navigator navigator) {
         super(navigator);
-        this.state = new GameState(ConfigStore.current());
+        this.config = ConfigManager.getInstance().current();
+        this.state = new GameState(config);
         this.cell = fittedCellSize(state.board().cols(), state.board().rows());
     }
 
@@ -155,7 +164,23 @@ public class GameScreen extends BaseScreen {
 
         if (state.isGameOver()) {
             timer.stop();
+            //dialogs can't block inside an animation pulse, so show it just after
+            Platform.runLater(this::offerHighScore);
         }
+    }
+
+    //asks for a name if the score made the top 10, then saves it to the JSON file
+    private void offerHighScore() {
+        HighScoreManager scores = HighScoreManager.getInstance();
+        if (highScoreOffered || !scores.qualifies(state.score())) {
+            return;
+        }
+        highScoreOffered = true;
+
+        Dialogs.askName(getRoot(), "New High Score",
+                        "Your score of " + state.score() + " made the top 10!")
+                .ifPresent(name -> scores.submit(
+                        new HighScore(name, state.score(), config.summary(1))));
     }
 
     private void handleKey(KeyEvent event) {
