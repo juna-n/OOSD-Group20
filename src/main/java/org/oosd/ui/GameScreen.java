@@ -2,6 +2,7 @@ package org.oosd.ui;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -12,6 +13,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import org.oosd.controller.GameController;
 import org.oosd.controller.GameSession;
 import org.oosd.controller.command.KeyBindings;
@@ -26,7 +28,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /*
-playing screen
+playing screen, the V in MVC
 builds a GameSession (the controllers), shows one PlayerPanel per player,
 forwards key presses to KeyBindings and drives everything from one timer
 no game rules live here
@@ -48,8 +50,13 @@ public class GameScreen extends BaseScreen {
     private final KeyBindings keys;
     private final List<PlayerPanel> panels = new ArrayList<>();
 
-    //M and S change the saved config, this keeps the status bar in step with it
+    //the music and sound keys change the saved config, this keeps the status bar in step with it
     private final Consumer<GameConfig> settingsListener = this::showSettings;
+
+    //if the window loses focus while a key is held its release never reaches us,
+    //so forget all held keys rather than leave a piece sliding forever
+    private final ChangeListener<Boolean> focusListener;
+    private Window window;
 
     private Label settingsLabel;
     private AnimationTimer timer;
@@ -62,6 +69,11 @@ public class GameScreen extends BaseScreen {
         this.config = settings.current();
         this.session = new GameSession(config, new PlayerFactory());
         this.keys = KeyBindings.forSession(session, settings);
+        this.focusListener = (observable, wasFocused, isFocused) -> {
+            if (!isFocused) {
+                keys.releaseAll();
+            }
+        };
     }
 
     @Override
@@ -87,7 +99,7 @@ public class GameScreen extends BaseScreen {
 
         settingsLabel = new Label();
         settingsLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #c9c9d1;");
-        Label keysLabel = new Label("P  pause    M  music    S  sound    Esc  menu");
+        Label keysLabel = new Label(KeyBindings.globalHint());
         keysLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #8a8a97;");
         HBox statusBar = new HBox(30, settingsLabel, keysLabel);
         statusBar.setAlignment(Pos.CENTER);
@@ -109,7 +121,8 @@ public class GameScreen extends BaseScreen {
 
         //key events go to the focused node, so the root has to be focusable
         layout.setFocusTraversable(true);
-        layout.setOnKeyPressed(this::handleKey);
+        layout.setOnKeyPressed(this::handleKeyPressed);
+        layout.setOnKeyReleased(this::handleKeyReleased);
 
         settings.addListener(settingsListener);
         return layout;
@@ -136,6 +149,8 @@ public class GameScreen extends BaseScreen {
     @Override
     public void onShow() {
         getRoot().requestFocus();
+        window = getRoot().getScene().getWindow();
+        window.focusedProperty().addListener(focusListener);
         session.start();
 
         lastFrameNanos = 0;
@@ -153,6 +168,8 @@ public class GameScreen extends BaseScreen {
         double elapsedSeconds = lastFrameNanos == 0 ? 0 : (now - lastFrameNanos) / 1_000_000_000.0;
         lastFrameNanos = now;
 
+        //held keys first, so a move and the gravity step land in the same frame
+        keys.update(elapsedSeconds);
         session.update(elapsedSeconds);
         panels.forEach(PlayerPanel::render);
 
@@ -164,9 +181,15 @@ public class GameScreen extends BaseScreen {
         }
     }
 
-    private void handleKey(KeyEvent event) {
-        if (keys.handle(event.getCode())) {
+    private void handleKeyPressed(KeyEvent event) {
+        if (keys.press(event.getCode())) {
             panels.forEach(PlayerPanel::render);
+            event.consume();
+        }
+    }
+
+    private void handleKeyReleased(KeyEvent event) {
+        if (keys.release(event.getCode())) {
             event.consume();
         }
     }
@@ -205,6 +228,8 @@ public class GameScreen extends BaseScreen {
         }
 
         session.setPaused(pausedByPlayer);
+        //keys released while the dialog was open never reached us
+        keys.releaseAll();
         //the dialog took focus, take it back or the keys stay dead
         getRoot().requestFocus();
     }
@@ -235,6 +260,10 @@ public class GameScreen extends BaseScreen {
             timer.stop();
         }
         session.shutdown();
+        keys.releaseAll();
+        if (window != null) {
+            window.focusedProperty().removeListener(focusListener);
+        }
         settings.removeListener(settingsListener);
         panels.forEach(PlayerPanel::detach);
         navigator.show(new MainMenuScreen(navigator));
