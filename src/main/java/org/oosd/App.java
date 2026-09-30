@@ -1,45 +1,49 @@
 package org.oosd;
 
-import org.oosd.ui.Navigator;
-import org.oosd.ui.Screen;
-import org.oosd.ui.SplashScreen;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.oosd.ui.Navigator;
+import org.oosd.ui.Screen;
+import org.oosd.ui.SplashScreen;
 
 /*
  application entry point
- one Stage and one scene exist for the whole run, changing screens swaps
- the scenes root node rather than building a new scene or opening a new
- window
+ one Stage exists for the whole run, each screen gets a fresh Scene so the
+ window can be resized to suit it: the game screen sizes the window to its
+ content (field size, one or two players), every other screen puts the
+ window back to the standard size, and the window is re-centred each time
 */
 public class App extends Application implements Navigator {
 
-    private static final int WINDOW_WIDTH = 640;
-    private static final int WINDOW_HEIGHT = 760;
+    public static final int WINDOW_WIDTH = 640;
+    public static final int WINDOW_HEIGHT = 760;
 
     private Stage stage;
-    private Scene scene;
 
     @Override
     public void start(Stage primaryStage) {
         this.stage = primaryStage;
-
-        Screen splash = new SplashScreen(this);
-        this.scene = new Scene(splash.getRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
-
         stage.setTitle("OOSD-Group20 Tetris");
-        stage.setScene(scene);
         stage.setResizable(true);
-        stage.show();
-        stage.centerOnScreen();
-
-        splash.onShow();
+        show(new SplashScreen(this));
     }
 
     @Override
     public void show(Screen screen) {
-        scene.setRoot(screen.getRoot());
+        Scene scene = screen.sizesWindowToContent()
+                ? new Scene(screen.getRoot())
+                : new Scene(screen.getRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        //a maximised window ignores sizeToScene, so un-maximise first
+        stage.setMaximized(false);
+        stage.setScene(scene);
+        stage.sizeToScene();
+        if (!stage.isShowing()) {
+            stage.show();
+        }
+        stage.centerOnScreen();
+
         screen.onShow();
     }
 
