@@ -35,7 +35,7 @@ public class GameSession {
                 .mapToObj(playerNumber -> new GameController(
                         playerNumber,
                         new GameState(config, sequence),
-                        factory.create(config.playerType(playerNumber))))
+                        factory.create(playerNumber, config.playerType(playerNumber))))
                 .toList();
     }
 

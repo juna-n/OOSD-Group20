@@ -67,7 +67,8 @@ public class GameScreen extends BaseScreen {
     public GameScreen(Navigator navigator) {
         super(navigator);
         this.config = settings.current();
-        this.session = new GameSession(config, new PlayerFactory());
+        //automated players post their decisions back to the JavaFX thread with runLater
+        this.session = new GameSession(config, new PlayerFactory(Platform::runLater));
         this.keys = KeyBindings.forSession(session, settings);
         this.focusListener = (observable, wasFocused, isFocused) -> {
             if (!isFocused) {
