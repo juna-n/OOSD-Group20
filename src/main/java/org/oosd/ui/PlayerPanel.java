@@ -16,6 +16,7 @@ import org.oosd.model.Cell;
 import org.oosd.model.GameBoard;
 import org.oosd.model.GameListener;
 import org.oosd.model.GameState;
+import org.oosd.model.PlayerType;
 import org.oosd.model.Tetromino;
 import org.oosd.model.TetrominoType;
 
@@ -34,6 +35,7 @@ public final class PlayerPanel {
 
     private static final Color FIELD_BACKGROUND = Color.web("#101016");
     private static final Color GRID_LINE = Color.web("#26262f");
+    private static final Color WARNING = Color.web("#d93b3b");
 
     private final GameController controller;
     private final GameState state;
@@ -142,13 +144,19 @@ public final class PlayerPanel {
             }
         }
 
+        //an automated player that can't decide (e.g. server not running) has no control
+        String status = controller.player().status();
+        if (!status.isEmpty() && !state.isGameOver()) {
+            drawWarningBanner(gc, controller.playerType() == PlayerType.EXTERNAL ? "SERVER OFFLINE" : "NO CONTROL");
+        }
+
         if (state.isGameOver()) {
             drawOverlay(gc, "GAME OVER", "Final score: " + state.score());
         } else if (state.isPaused()) {
             drawOverlay(gc, "PAUSED", "Press P to resume");
         }
 
-        statusLabel.setText(controller.player().status());
+        statusLabel.setText(status);
         renderPreview();
     }
 
@@ -185,6 +193,18 @@ public final class PlayerPanel {
         gc.setStroke(color.darker());
         gc.setLineWidth(2);
         gc.strokeRoundRect(x + 1, y + 1, size - 2, size - 2, 5, 5);
+    }
+
+    //red strip across the top of the field, the details are in the side panel
+    private void drawWarningBanner(GraphicsContext gc, String text) {
+        double height = Math.max(22, cell);
+        gc.setFill(WARNING.deriveColor(0, 1, 1, 0.9));
+        gc.fillRect(0, 0, fieldCanvas.getWidth(), height);
+
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("System", FontWeight.BOLD, Math.min(16, fieldCanvas.getWidth() / 12)));
+        gc.fillText(text, fieldCanvas.getWidth() / 2, height / 2 + 5);
     }
 
     private void drawOverlay(GraphicsContext gc, String title, String subtitle) {
