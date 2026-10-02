@@ -2,6 +2,7 @@ package org.oosd.ui;
 
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import java.net.URL;
@@ -26,8 +27,12 @@ public abstract class BaseScreen implements Screen {
         return root;
     }
 
-    //base colour of every screen, also the fallback when an image is missing
-    protected static final String BACKGROUND_COLOR = "#1b1b22";
+    //a label with one of the text styles from tetris.css, e.g. "heading" or "caption"
+    protected static Label styledLabel(String text, String styleClass) {
+        Label label = new Label(text);
+        label.getStyleClass().add(styleClass);
+        return label;
+    }
 
     private static final double DEFAULT_SCRIM_OPACITY = 0.55;
 
@@ -38,7 +43,8 @@ public abstract class BaseScreen implements Screen {
 
     protected Parent withBackground(String resourcePath, Node content, double scrimOpacity) {
         StackPane layered = new StackPane();
-        layered.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
+        //screen background colour comes from tetris.css, also the fallback when an image is missing
+        layered.getStyleClass().add("screen");
 
         URL image = getClass().getResource(resourcePath);
         if (image != null) {
@@ -55,7 +61,7 @@ public abstract class BaseScreen implements Screen {
     /*
     a Region with a CSS background rather than an ImageView, because
     -fx-background-size: cover fills the window at any size without
-    distorting the image
+    distorting the image, inline because the image URL is only known at runtime
     */
     private static Region backgroundLayer(URL image) {
         Region background = new Region();

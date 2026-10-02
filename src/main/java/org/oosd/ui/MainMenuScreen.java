@@ -19,8 +19,7 @@ public class MainMenuScreen extends BaseScreen {
 
     @Override
     protected Parent buildRoot() {
-        Label heading = new Label("Main Menu");
-        heading.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;");
+        Label heading = styledLabel("Main Menu", "heading");
 
         Button play = menuButton("Play");
         Button configuration = menuButton("Configuration");
@@ -35,8 +34,8 @@ public class MainMenuScreen extends BaseScreen {
         VBox layout = new VBox(14, heading, play, configuration, highScores, exit);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(40));
-        //remove background colour when including the image, otherwise colour paints over the image
-        layout.setStyle("-fx-background-color: #1b1b22;");
+        //remove this style class when including the image, otherwise the colour paints over it
+        layout.getStyleClass().add("screen");
 
         //slightly stronger scrim than the splash screen, helps keep buttons readable
         //return withBackground(BACKGROUND_PATH, layout, 0.62);
@@ -47,8 +46,8 @@ public class MainMenuScreen extends BaseScreen {
 
     private Button menuButton(String text) {
         Button button = new Button(text);
-        button.setPrefWidth(220);
-        button.setPrefHeight(42);
+        //size and look come from .menu-button in tetris.css
+        button.getStyleClass().add("menu-button");
         return button;
     }
 

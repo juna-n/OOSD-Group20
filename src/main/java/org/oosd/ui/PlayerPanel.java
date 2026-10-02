@@ -61,20 +61,17 @@ public final class PlayerPanel {
         fieldCanvas = new Canvas(board.cols() * cell, board.rows() * cell);
         previewCanvas = new Canvas(PREVIEW_BOX * PREVIEW_CELL, PREVIEW_BOX * PREVIEW_CELL);
 
-        Label title = new Label("Player " + controller.playerNumber());
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;");
+        Label title = styled(new Label("Player " + controller.playerNumber()), "player-title");
 
         levelValue = statValue("");
         linesValue = statValue("");
         scoreValue = statValue("");
 
-        statusLabel = new Label();
+        statusLabel = styled(new Label(), "warning-text");
         statusLabel.setWrapText(true);
         statusLabel.setMaxWidth(SIDEBAR_WIDTH);
-        statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #ff6b6b; -fx-font-weight: bold;");
 
-        Label hint = new Label(controlsHint);
-        hint.setStyle("-fx-font-size: 12px; -fx-text-fill: #8a8a97;");
+        Label hint = styled(new Label(controlsHint), "hint");
 
         VBox sidebar = new VBox(6,
                 title,
@@ -227,14 +224,16 @@ public final class PlayerPanel {
     }
 
     private static Label statCaption(String text) {
-        Label label = new Label(text.toUpperCase());
-        label.setStyle("-fx-font-size: 11px; -fx-text-fill: #8a8a97; -fx-font-weight: bold;");
-        return label;
+        return styled(new Label(text.toUpperCase()), "stat-caption");
     }
 
     private static Label statValue(String text) {
-        Label label = new Label(text);
-        label.setStyle("-fx-font-size: 20px; -fx-text-fill: #f2f2f2;");
+        return styled(new Label(text), "stat-value");
+    }
+
+    //text styles live in tetris.css, the canvas colours above stay in code because a Canvas can't be styled with CSS
+    private static Label styled(Label label, String styleClass) {
+        label.getStyleClass().add(styleClass);
         return label;
     }
 }
