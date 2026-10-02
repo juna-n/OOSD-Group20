@@ -6,13 +6,14 @@ import javafx.stage.Stage;
 import org.oosd.ui.Navigator;
 import org.oosd.ui.Screen;
 import org.oosd.ui.SplashScreen;
+import org.oosd.ui.Styles;
 
 /*
- application entry point
- one Stage exists for the whole run, each screen gets a fresh Scene so the
- window can be resized to suit it: the game screen sizes the window to its
- content (field size, one or two players), every other screen puts the
- window back to the standard size, and the window is re-centred each time
+application entry point
+one Stage exists for the whole run, each screen gets a fresh Scene so the
+window can be resized to suit it: the game screen sizes the window to its
+content (field size, one or two players), every other screen puts the
+window back to the standard size, and the window is re-centred each time
 */
 public class App extends Application implements Navigator {
 
@@ -34,6 +35,7 @@ public class App extends Application implements Navigator {
         Scene scene = screen.sizesWindowToContent()
                 ? new Scene(screen.getRoot())
                 : new Scene(screen.getRoot(), WINDOW_WIDTH, WINDOW_HEIGHT);
+        Styles.applyTo(scene);
 
         //a maximised window ignores sizeToScene, so un-maximise first
         stage.setMaximized(false);

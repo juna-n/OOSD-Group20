@@ -1,0 +1,183 @@
+/*
+ Tetris - Group 20 shared stylesheet
+ loaded into every scene by App and into every dialog by Dialogs, so the
+ whole program is styled from this one file instead of inline setStyle calls
+
+ colours are defined once as "looked-up colours" on .root and referred to by
+ name everywhere else, changing a colour here changes it in every screen
+*/
+
+.root {
+    -tetris-background: #1b1b22;
+    -tetris-surface: #262631;
+    -tetris-surface-hover: #32323f;
+    -tetris-border: #3a3a48;
+    -tetris-text: #f2f2f2;
+    -tetris-muted: #c9c9d1;
+    -tetris-dim: #8a8a97;
+    -tetris-accent: #31c7ef;
+    -tetris-warning: #ff6b6b;
+
+    /* JavaFX's built-in Modena theme derives every control colour from these,
+       setting them dark gives sliders, check boxes, tables and text fields a
+       matching dark look without restyling each control by hand */
+    -fx-base: #2c2c38;
+    -fx-background: -tetris-background;
+    -fx-control-inner-background: #23232c;
+    -fx-accent: -tetris-accent;
+    -fx-focus-color: -tetris-accent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* every screen's outermost layout */
+.screen {
+    -fx-background-color: -tetris-background;
+}
+
+/* ---------- text ---------- */
+
+.title {
+    -fx-font-size: 56px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tetris-text;
+}
+
+.heading {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tetris-text;
+}
+
+.subtitle {
+    -fx-font-size: 16px;
+    -fx-text-fill: -tetris-muted;
+}
+
+.credits {
+    -fx-font-size: 14px;
+    -fx-text-fill: -tetris-dim;
+}
+
+.caption {
+    -fx-font-size: 14px;
+    -fx-text-fill: -tetris-muted;
+}
+
+.value {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tetris-text;
+}
+
+.player-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tetris-text;
+}
+
+.stat-caption {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tetris-dim;
+}
+
+.stat-value {
+    -fx-font-size: 20px;
+    -fx-text-fill: -tetris-text;
+}
+
+.status-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: -tetris-muted;
+}
+
+.hint {
+    -fx-font-size: 12px;
+    -fx-text-fill: -tetris-dim;
+}
+
+.warning-text {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tetris-warning;
+}
+
+/* ---------- buttons, with hover / pressed / disabled states ---------- */
+
+.button {
+    -fx-background-color: -tetris-surface;
+    -fx-background-radius: 6;
+    -fx-border-color: -tetris-border;
+    -fx-border-radius: 6;
+    -fx-text-fill: -tetris-text;
+    -fx-font-size: 15px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: -tetris-surface-hover;
+    -fx-border-color: -tetris-accent;
+}
+
+.button:pressed {
+    -fx-background-color: derive(-tetris-accent, -55%);
+}
+
+.button:focused {
+    -fx-border-color: -tetris-accent;
+}
+
+.button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.menu-button {
+    -fx-font-size: 17px;
+    -fx-pref-width: 220px;
+    -fx-pref-height: 42px;
+}
+
+.wide-button {
+    -fx-pref-width: 170px;
+    -fx-pref-height: 40px;
+}
+
+/* ---------- other controls ---------- */
+
+.check-box,
+.radio-button {
+    -fx-font-size: 14px;
+    -fx-text-fill: -tetris-text;
+}
+
+.table-view {
+    -fx-background-color: -tetris-surface;
+    -fx-border-color: -tetris-border;
+    -fx-font-size: 14px;
+}
+
+.table-view .column-header .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: -tetris-text;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: -tetris-dim;
+}
+
+/* ---------- dialogs ---------- */
+
+.dialog-pane {
+    -fx-background-color: -tetris-surface;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: -tetris-background;
+}
+
+.dialog-pane .header-panel .label,
+.dialog-pane > .content.label,
+.dialog-pane .content .label {
+    -fx-font-size: 14px;
+    -fx-text-fill: -tetris-text;
+}

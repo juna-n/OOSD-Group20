@@ -19,17 +19,10 @@ public class SplashScreen extends BaseScreen {
 
     @Override
     protected Parent buildRoot() {
-        Label title = new Label("TETRIS");
-        title.setStyle("-fx-font-size: 56px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;");
-
-        Label course = new Label("2006ICT Object Oriented Software Development");
-        course.setStyle("-fx-font-size: 16px; -fx-text-fill: #cfcfcf;");
-
-        Label group = new Label("Group 20 \u2014 Gold Coast Campus");
-        group.setStyle("-fx-font-size: 16px; -fx-text-fill: #cfcfcf;");
-
-        Label members = new Label("Oscar Unicomb-Dodds \u00b7 Juna Nakanishi \u00b7 Pedro Penna Navarrete");
-        members.setStyle("-fx-font-size: 14px; -fx-text-fill: #9f9f9f;");
+        Label title = styledLabel("TETRIS", "title");
+        Label course = styledLabel("2006ICT Object Oriented Software Development", "subtitle");
+        Label group = styledLabel("Group 20 \u2014 Gold Coast Campus", "subtitle");
+        Label members = styledLabel("Oscar Unicomb-Dodds \u00b7 Juna Nakanishi \u00b7 Pedro Penna Navarrete", "credits");
 
         VBox textLayer = new VBox(14, title, course, group, members);
         textLayer.setAlignment(Pos.CENTER);

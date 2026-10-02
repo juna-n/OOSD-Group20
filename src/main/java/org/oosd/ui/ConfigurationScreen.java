@@ -38,8 +38,7 @@ public class ConfigurationScreen extends BaseScreen {
     protected Parent buildRoot() {
         GameConfig config = ConfigManager.getInstance().current();
 
-        Label heading = new Label("Configuration");
-        heading.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;");
+        Label heading = styledLabel("Configuration", "heading");
 
         GridPane grid = new GridPane();
         grid.setHgap(16);
@@ -65,14 +64,13 @@ public class ConfigurationScreen extends BaseScreen {
                 ((RadioButton) toggle).disableProperty().bind(extendedModeBox.selectedProperty().not()));
 
         Button backButton = new Button("Back");
-        backButton.setPrefWidth(200);
-        backButton.setPrefHeight(40);
+        backButton.getStyleClass().add("wide-button");
         backButton.setOnAction(event -> navigator.show(new MainMenuScreen(navigator)));
 
         VBox layout = new VBox(28, heading, grid, backButton);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(40));
-        layout.setStyle("-fx-background-color: #1b1b22;");
+        layout.getStyleClass().add("screen");
 
         ready = true;
         return layout;
@@ -86,9 +84,8 @@ public class ConfigurationScreen extends BaseScreen {
         slider.setSnapToTicks(true);
         slider.setShowTickMarks(true);
 
-        Label valueLabel = new Label(String.valueOf(initial));
+        Label valueLabel = styledLabel(String.valueOf(initial), "value");
         valueLabel.setMinWidth(32);
-        valueLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;");
 
         slider.valueProperty().addListener((observable, oldValue, newValue) -> {
             valueLabel.setText(String.valueOf(newValue.intValue()));
@@ -105,9 +102,8 @@ public class ConfigurationScreen extends BaseScreen {
         CheckBox checkBox = new CheckBox();
         checkBox.setSelected(initial);
 
-        Label stateLabel = new Label(initial ? "On" : "Off");
+        Label stateLabel = styledLabel(initial ? "On" : "Off", "value");
         stateLabel.setMinWidth(32);
-        stateLabel.setStyle("-fx-font-size: 15px; -fx-text-fill: #f2f2f2;");
 
         checkBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
             stateLabel.setText(newValue ? "On" : "Off");
@@ -131,7 +127,6 @@ public class ConfigurationScreen extends BaseScreen {
             button.setUserData(type);
             button.setToggleGroup(group);
             button.setSelected(type == initial);
-            button.setStyle("-fx-font-size: 14px; -fx-text-fill: #f2f2f2;");
             options.getChildren().add(button);
         }
 
@@ -149,9 +144,7 @@ public class ConfigurationScreen extends BaseScreen {
     }
 
     private Label caption(String text) {
-        Label label = new Label(text);
-        label.setStyle("-fx-font-size: 14px; -fx-text-fill: #c9c9d1;");
-        return label;
+        return styledLabel(text, "caption");
     }
 
     private void save() {

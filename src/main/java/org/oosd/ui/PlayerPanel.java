@@ -16,6 +16,7 @@ import org.oosd.model.Cell;
 import org.oosd.model.GameBoard;
 import org.oosd.model.GameListener;
 import org.oosd.model.GameState;
+import org.oosd.model.PlayerType;
 import org.oosd.model.Tetromino;
 import org.oosd.model.TetrominoType;
 
@@ -34,6 +35,7 @@ public final class PlayerPanel {
 
     private static final Color FIELD_BACKGROUND = Color.web("#101016");
     private static final Color GRID_LINE = Color.web("#26262f");
+    private static final Color WARNING = Color.web("#d93b3b");
 
     private final GameController controller;
     private final GameState state;
@@ -59,20 +61,17 @@ public final class PlayerPanel {
         fieldCanvas = new Canvas(board.cols() * cell, board.rows() * cell);
         previewCanvas = new Canvas(PREVIEW_BOX * PREVIEW_CELL, PREVIEW_BOX * PREVIEW_CELL);
 
-        Label title = new Label("Player " + controller.playerNumber());
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;");
+        Label title = styled(new Label("Player " + controller.playerNumber()), "player-title");
 
         levelValue = statValue("");
         linesValue = statValue("");
         scoreValue = statValue("");
 
-        statusLabel = new Label();
+        statusLabel = styled(new Label(), "warning-text");
         statusLabel.setWrapText(true);
         statusLabel.setMaxWidth(SIDEBAR_WIDTH);
-        statusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #ff6b6b; -fx-font-weight: bold;");
 
-        Label hint = new Label(controlsHint);
-        hint.setStyle("-fx-font-size: 12px; -fx-text-fill: #8a8a97;");
+        Label hint = styled(new Label(controlsHint), "hint");
 
         VBox sidebar = new VBox(6,
                 title,
@@ -142,13 +141,19 @@ public final class PlayerPanel {
             }
         }
 
+        //an automated player that can't decide (e.g. server not running) has no control
+        String status = controller.player().status();
+        if (!status.isEmpty() && !state.isGameOver()) {
+            drawWarningBanner(gc, controller.playerType() == PlayerType.EXTERNAL ? "SERVER OFFLINE" : "NO CONTROL");
+        }
+
         if (state.isGameOver()) {
             drawOverlay(gc, "GAME OVER", "Final score: " + state.score());
         } else if (state.isPaused()) {
             drawOverlay(gc, "PAUSED", "Press P to resume");
         }
 
-        statusLabel.setText(controller.player().status());
+        statusLabel.setText(status);
         renderPreview();
     }
 
@@ -187,6 +192,18 @@ public final class PlayerPanel {
         gc.strokeRoundRect(x + 1, y + 1, size - 2, size - 2, 5, 5);
     }
 
+    //red strip across the top of the field, the details are in the side panel
+    private void drawWarningBanner(GraphicsContext gc, String text) {
+        double height = Math.max(22, cell);
+        gc.setFill(WARNING.deriveColor(0, 1, 1, 0.9));
+        gc.fillRect(0, 0, fieldCanvas.getWidth(), height);
+
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("System", FontWeight.BOLD, Math.min(16, fieldCanvas.getWidth() / 12)));
+        gc.fillText(text, fieldCanvas.getWidth() / 2, height / 2 + 5);
+    }
+
     private void drawOverlay(GraphicsContext gc, String title, String subtitle) {
         gc.setFill(Color.color(0, 0, 0, 0.72));
         gc.fillRect(0, 0, fieldCanvas.getWidth(), fieldCanvas.getHeight());
@@ -207,14 +224,16 @@ public final class PlayerPanel {
     }
 
     private static Label statCaption(String text) {
-        Label label = new Label(text.toUpperCase());
-        label.setStyle("-fx-font-size: 11px; -fx-text-fill: #8a8a97; -fx-font-weight: bold;");
-        return label;
+        return styled(new Label(text.toUpperCase()), "stat-caption");
     }
 
     private static Label statValue(String text) {
-        Label label = new Label(text);
-        label.setStyle("-fx-font-size: 20px; -fx-text-fill: #f2f2f2;");
+        return styled(new Label(text), "stat-value");
+    }
+
+    //text styles live in tetris.css, the canvas colours above stay in code because a Canvas can't be styled with CSS
+    private static Label styled(Label label, String styleClass) {
+        label.getStyleClass().add(styleClass);
         return label;
     }
 }

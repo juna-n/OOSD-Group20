@@ -1,6 +1,7 @@
 package org.oosd.controller.player;
 
 import org.oosd.model.PlayerType;
+import org.oosd.network.TetrisServerClient;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -8,12 +9,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /*
- Factory pattern: the only place that knows which PlayerController class
- goes with which PlayerType
- GameSession just asks for "a player of this type" and gets back the
- interface, so it never names a concrete player class, and it also hides
- the setup automated players need (their own worker thread)
- not final so tests can substitute a factory that returns test doubles
+Factory pattern: the only place that knows which PlayerController class
+goes with which PlayerType
+GameSession just asks for "a player of this type" and gets back the
+interface, so it never names a concrete player class, and it also hides
+the setup automated players need (their own worker thread, a server client)
+not final so tests can substitute a factory that returns test doubles
 */
 public class PlayerFactory {
 
@@ -29,8 +30,8 @@ public class PlayerFactory {
         return switch (type) {
             case HUMAN -> new HumanPlayer();
             case AI -> new AIPlayer(workerThread("ai-player-" + playerNumber), uiExecutor);
-            //stand-in until ExternalPlayer arrives in section 5
-            case EXTERNAL -> new HumanPlayer();
+            case EXTERNAL -> new ExternalPlayer(workerThread("external-player-" + playerNumber), uiExecutor,
+                    new TetrisServerClient());
         };
     }
 

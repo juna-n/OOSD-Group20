@@ -14,11 +14,15 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import org.oosd.audio.AudioManager;
+import org.oosd.audio.GameSoundEffects;
 import org.oosd.controller.GameController;
 import org.oosd.controller.GameSession;
 import org.oosd.controller.command.KeyBindings;
 import org.oosd.controller.player.PlayerFactory;
 import org.oosd.model.GameConfig;
+import org.oosd.model.GameEvent;
+import org.oosd.model.GameListener;
 import org.oosd.model.HighScore;
 import org.oosd.persistence.ConfigManager;
 import org.oosd.persistence.HighScoreManager;
@@ -45,10 +49,14 @@ public class GameScreen extends BaseScreen {
     private static final int VERTICAL_CHROME = 190;
 
     private final ConfigManager settings = ConfigManager.getInstance();
+    private final AudioManager audio = AudioManager.getInstance();
     private final GameConfig config;
     private final GameSession session;
     private final KeyBindings keys;
     private final List<PlayerPanel> panels = new ArrayList<>();
+
+    //undo steps for every listener this screen attaches to a game, run when leaving
+    private final List<Runnable> detachers = new ArrayList<>();
 
     //the music and sound keys change the saved config, this keeps the status bar in step with it
     private final Consumer<GameConfig> settingsListener = this::showSettings;
@@ -96,18 +104,17 @@ public class GameScreen extends BaseScreen {
             PlayerPanel panel = new PlayerPanel(controller, cell, hint);
             panels.add(panel);
             fields.getChildren().add(panel.getRoot());
+            attachAudio(controller);
         }
 
-        settingsLabel = new Label();
-        settingsLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #c9c9d1;");
-        Label keysLabel = new Label(KeyBindings.globalHint());
-        keysLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #8a8a97;");
+        settingsLabel = styledLabel("", "status-text");
+        Label keysLabel = styledLabel(KeyBindings.globalHint(), "hint");
         HBox statusBar = new HBox(30, settingsLabel, keysLabel);
         statusBar.setAlignment(Pos.CENTER);
         showSettings(settings.current());
 
         Button backButton = new Button("Back to Menu");
-        backButton.setPrefWidth(150);
+        backButton.getStyleClass().add("wide-button");
         //without this the button grabs keyboard focus and Space would press it
         backButton.setFocusTraversable(false);
         backButton.setOnAction(event -> confirmLeave());
@@ -115,7 +122,7 @@ public class GameScreen extends BaseScreen {
         VBox layout = new VBox(16, statusBar, fields, backButton);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(PADDING));
-        layout.setStyle("-fx-background-color: #1b1b22;");
+        layout.getStyleClass().add("screen");
 
         //Esc is bound like any other key, written as a lambda Command
         keys.bind(KeyCode.ESCAPE, this::confirmLeave);
@@ -127,6 +134,23 @@ public class GameScreen extends BaseScreen {
 
         settings.addListener(settingsListener);
         return layout;
+    }
+
+    /*
+    sound effects for this field (move clicks only for humans), and the music
+    follows the pause state of the whole session
+    */
+    private void attachAudio(GameController controller) {
+        GameSoundEffects effects = new GameSoundEffects(audio, controller.player().acceptsKeyboard());
+        GameListener musicFollowsPause = (event, source) -> {
+            if (event == GameEvent.PAUSE_CHANGED) {
+                audio.setMusicPaused(session.isPaused());
+            }
+        };
+        controller.state().addListener(effects);
+        controller.state().addListener(musicFollowsPause);
+        detachers.add(() -> controller.state().removeListener(effects));
+        detachers.add(() -> controller.state().removeListener(musicFollowsPause));
     }
 
     /*
@@ -153,6 +177,7 @@ public class GameScreen extends BaseScreen {
         window = getRoot().getScene().getWindow();
         window.focusedProperty().addListener(focusListener);
         session.start();
+        audio.playMusic();
 
         lastFrameNanos = 0;
         timer = new AnimationTimer() {
@@ -177,6 +202,7 @@ public class GameScreen extends BaseScreen {
         if (session.isOver() && !finished) {
             finished = true;
             timer.stop();
+            audio.stopMusic();
             //dialogs can't block inside an animation pulse, so show them just after
             Platform.runLater(this::recordHighScores);
         }
@@ -222,6 +248,7 @@ public class GameScreen extends BaseScreen {
         if (confirmed) {
             finished = true;
             timer.stop();
+            audio.stopMusic();
             session.endAll();
             recordHighScores();
             leave();
@@ -261,6 +288,8 @@ public class GameScreen extends BaseScreen {
             timer.stop();
         }
         session.shutdown();
+        audio.stopMusic();
+        detachers.forEach(Runnable::run);
         keys.releaseAll();
         if (window != null) {
             window.focusedProperty().removeListener(focusListener);

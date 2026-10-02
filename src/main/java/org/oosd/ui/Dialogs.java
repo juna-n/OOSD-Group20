@@ -55,8 +55,9 @@ public final class Dialogs {
                 .filter(name -> !name.isEmpty());
     }
 
-    //centres the dialog over the game window instead of wherever the OS puts it
+    //centres the dialog over the game window and gives it the shared stylesheet
     private static void attachTo(Dialog<?> dialog, Node owner) {
+        Styles.applyTo(dialog.getDialogPane());
         if (owner != null && owner.getScene() != null) {
             dialog.initOwner(owner.getScene().getWindow());
         }

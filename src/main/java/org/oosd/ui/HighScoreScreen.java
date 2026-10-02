@@ -30,8 +30,7 @@ public class HighScoreScreen extends BaseScreen {
 
     @Override
     protected Parent buildRoot() {
-        Label heading = new Label("High Scores");
-        heading.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #f2f2f2;");
+        Label heading = styledLabel("High Scores", "heading");
 
         table = new TableView<>(FXCollections.observableArrayList(scores.topTen()));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
@@ -73,15 +72,13 @@ public class HighScoreScreen extends BaseScreen {
         table.getColumns().add(configColumn);
 
         Button clearButton = new Button("Clear Scores");
-        clearButton.setPrefWidth(160);
-        clearButton.setPrefHeight(40);
+        clearButton.getStyleClass().add("wide-button");
         //nothing to clear when the table is already empty
         clearButton.disableProperty().bind(Bindings.isEmpty(table.getItems()));
         clearButton.setOnAction(event -> confirmClear());
 
         Button backButton = new Button("Back");
-        backButton.setPrefWidth(160);
-        backButton.setPrefHeight(40);
+        backButton.getStyleClass().add("wide-button");
         backButton.setOnAction(event -> navigator.show(new MainMenuScreen(navigator)));
 
         HBox buttons = new HBox(16, clearButton, backButton);
@@ -90,7 +87,7 @@ public class HighScoreScreen extends BaseScreen {
         VBox layout = new VBox(24, heading, table, buttons);
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(40));
-        layout.setStyle("-fx-background-color: #1b1b22;");
+        layout.getStyleClass().add("screen");
         return layout;
     }
 
